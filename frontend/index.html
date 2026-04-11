@@ -83,8 +83,6 @@
   .wallet-input { flex:1; min-width:200px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.2rem; color:var(--text); font-family:'DM Mono',monospace; font-size:0.85rem; outline:none; transition:border-color 0.2s; }
   .wallet-input:focus { border-color:var(--purple); }
   .wallet-input::placeholder { color:var(--text3); }
-
-  /* Action buttons row */
   .action-btns { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
   .demo-btn { flex:1; min-width:140px; background:var(--surface); color:var(--text); border:1px solid var(--border2); padding:0.85rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
   .demo-btn:hover { border-color:var(--purple3); transform:translateY(-1px); }
@@ -92,7 +90,6 @@
   .pay-btn { flex:1; min-width:140px; background:linear-gradient(135deg,var(--purple),var(--purple2)); color:white; border:none; padding:0.85rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 20px var(--purple-glow); display:flex; align-items:center; justify-content:center; gap:0.5rem; }
   .pay-btn:hover { transform:translateY(-1px); opacity:0.9; }
   .pay-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-
   .demo-banner { background:rgba(251,191,36,0.1); border:1px solid var(--warning); border-radius:10px; padding:0.7rem 1rem; font-size:0.82rem; color:var(--warning); margin-bottom:1.5rem; display:none; font-family:'DM Mono',monospace; }
   .demo-banner.visible { display:block; }
   .loading { display:none; flex-direction:column; align-items:center; gap:1rem; padding:2.5rem; color:var(--text2); font-size:0.9rem; }
@@ -201,7 +198,7 @@
 <section id="how">
   <span class="section-label">How it works</span>
   <h2 class="section-title">Simple. Autonomous. Instant.</h2>
-  <p class="section-sub">Two ways to use DataVend — try it free in demo mode, or pay $0.01 USDC via x402 for full access.</p>
+  <p class="section-sub">Two ways to use DataVend — try it free in demo mode, or pay $0.01 USDC via x402 for the full paid experience.</p>
   <div class="steps">
     <div class="step-card">
       <span class="step-num">01</span>
@@ -238,8 +235,6 @@
   <p class="section-sub">Try free with Demo Mode, or connect Freighter and pay $0.01 USDC via x402 for the full paid experience.</p>
 
   <div class="analyzer-box">
-
-    <!-- Freighter Connect Bar -->
     <div class="wallet-connect-bar">
       <div class="wallet-status" id="walletStatus">
         <div class="wallet-dot" id="walletDot"></div>
@@ -379,15 +374,18 @@
     themeToggle.textContent = isDark ? '🌙' : '☀️';
   });
 
-  // Connect Freighter
+  // Connect Freighter - fixed detection
   async function connectFreighter() {
     const btn = document.getElementById('connectBtn');
     const statusText = document.getElementById('walletStatusText');
     const dot = document.getElementById('walletDot');
     const walletStatus = document.getElementById('walletStatus');
 
-    if (typeof window.freighter === 'undefined' && typeof window.freighterApi === 'undefined') {
-      showError('Freighter extension not found. Install it from freighter.app on desktop Chrome, then refresh.');
+    // Check for Freighter - it injects as window.freighterApi
+    const freighter = window.freighterApi;
+
+    if (!freighter) {
+      showError('Freighter extension not detected. Make sure it is installed, unlocked, and you are on desktop Chrome. Then refresh the page.');
       return;
     }
 
@@ -395,9 +393,14 @@
       btn.textContent = 'Connecting...';
       btn.disabled = true;
 
-      const api = window.freighterApi || window.freighter;
-      await api.requestAccess();
-      const addressResult = await api.getAddress();
+      // Request access
+      const accessResult = await freighter.requestAccess();
+      if (accessResult && accessResult.error) throw new Error(accessResult.error);
+
+      // Get address
+      const addressResult = await freighter.getAddress();
+      if (addressResult && addressResult.error) throw new Error(addressResult.error);
+
       connectedPublicKey = addressResult.address || addressResult;
       freighterConnected = true;
 
@@ -413,7 +416,7 @@
     } catch(err) {
       btn.textContent = 'Connect Freighter';
       btn.disabled = false;
-      showError('Could not connect Freighter: ' + (err.message || err));
+      showError('Could not connect Freighter: ' + (err.message || JSON.stringify(err)));
     }
   }
 
@@ -447,7 +450,7 @@
       return;
     }
     if (!freighterConnected) {
-      showError('Please connect your Freighter wallet first.');
+      showError('Please connect your Freighter wallet first to pay via x402.');
       return;
     }
     setLoading(true, 'Initiating x402 payment...');
@@ -468,12 +471,12 @@
         const paymentInstructions = JSON.parse(atob(paymentHeader));
         const paymentOption = paymentInstructions.accepts[0];
 
-        const api = window.freighterApi || window.freighter;
-        const signResult = await api.signAuthEntry(paymentOption.extra?.authEntry || paymentHeader, {
+        const freighter = window.freighterApi;
+        const signResult = await freighter.signAuthEntry(paymentHeader, {
           networkPassphrase: 'Public Global Stellar Network ; September 2015'
         });
 
-        if (signResult.error) throw new Error('Payment rejected: ' + signResult.error);
+        if (signResult && signResult.error) throw new Error('Payment rejected: ' + signResult.error);
 
         setLoading(true, 'Verifying payment...');
 
@@ -504,13 +507,12 @@
 
   function setLoading(show, text) {
     const loading = document.getElementById('loading');
-    const loadingText = document.getElementById('loadingText');
     const demoBtn = document.getElementById('demoBtn');
     const payBtn = document.getElementById('payBtn');
     if (show) {
       loading.classList.add('visible');
       document.getElementById('results').style.display = 'none';
-      if (text) loadingText.textContent = text;
+      if (text) document.getElementById('loadingText').textContent = text;
       demoBtn.disabled = true;
       payBtn.disabled = true;
     } else {
@@ -556,7 +558,7 @@
     const total = balances.reduce((s,b) => s + parseFloat(b.balance), 0);
     if (total === 0) return;
     let offset = 0;
-    const cx=50, cy=50, r=35, stroke=14, circ=2*Math.PI*r;
+    const cx=50,cy=50,r=35,stroke=14,circ=2*Math.PI*r;
     balances.slice(0,6).forEach((b,i) => {
       const pct = parseFloat(b.balance)/total;
       const dash = pct*circ;
