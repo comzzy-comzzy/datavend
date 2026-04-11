@@ -8,6 +8,7 @@ const { HTTPFacilitatorClient } = require('@x402/core/server');
 
 const app = express();
 app.use(cors());
+app.use('/freighter.js', express.static('/root/datavend/frontend/freighter.js'));
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
