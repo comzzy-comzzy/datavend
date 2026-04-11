@@ -5,474 +5,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DataVend — AI-Powered Stellar Data Agent</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/11.3.0/stellar-sdk.min.js"></script>
 <style>
   :root[data-theme="dark"] {
-    --bg: #0a0812;
-    --bg2: #100d1a;
-    --bg3: #16112a;
-    --surface: #1c1630;
-    --surface2: #231d3d;
-    --border: #2e2550;
-    --border2: #3d3268;
-    --purple: #7c3aed;
-    --purple2: #9d5cf6;
-    --purple3: #c084fc;
-    --purple-glow: rgba(124,58,237,0.3);
-    --accent: #e879f9;
-    --text: #f0eeff;
-    --text2: #b8aee0;
-    --text3: #7b6fa8;
-    --white: #ffffff;
-    --success: #34d399;
-    --warning: #fbbf24;
-    --error: #f87171;
-    --card-bg: rgba(28,22,48,0.8);
+    --bg: #0a0812; --bg2: #100d1a; --surface: #1c1630; --surface2: #231d3d;
+    --border: #2e2550; --border2: #3d3268; --purple: #7c3aed; --purple2: #9d5cf6;
+    --purple3: #c084fc; --purple-glow: rgba(124,58,237,0.3); --accent: #e879f9;
+    --text: #f0eeff; --text2: #b8aee0; --text3: #7b6fa8; --success: #34d399;
+    --warning: #fbbf24; --error: #f87171; --card-bg: rgba(28,22,48,0.8);
     --glass: rgba(124,58,237,0.08);
   }
   :root[data-theme="light"] {
-    --bg: #faf9ff;
-    --bg2: #f3f0ff;
-    --bg3: #ede8ff;
-    --surface: #ffffff;
-    --surface2: #f8f5ff;
-    --border: #e0d9f7;
-    --border2: #c4b5f4;
-    --purple: #7c3aed;
-    --purple2: #6d28d9;
-    --purple3: #8b5cf6;
-    --purple-glow: rgba(124,58,237,0.15);
-    --accent: #a21caf;
-    --text: #1e1040;
-    --text2: #4c3d82;
-    --text3: #7c6aad;
-    --white: #ffffff;
-    --success: #059669;
-    --warning: #d97706;
-    --error: #dc2626;
-    --card-bg: rgba(255,255,255,0.9);
+    --bg: #faf9ff; --bg2: #f3f0ff; --surface: #ffffff; --surface2: #f8f5ff;
+    --border: #e0d9f7; --border2: #c4b5f4; --purple: #7c3aed; --purple2: #6d28d9;
+    --purple3: #8b5cf6; --purple-glow: rgba(124,58,237,0.15); --accent: #a21caf;
+    --text: #1e1040; --text2: #4c3d82; --text3: #7c6aad; --success: #059669;
+    --warning: #d97706; --error: #dc2626; --card-bg: rgba(255,255,255,0.9);
     --glass: rgba(124,58,237,0.05);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html { scroll-behavior: smooth; }
-  body {
-    font-family: 'Instrument Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    transition: background 0.3s, color 0.3s;
-    overflow-x: hidden;
-  }
-  body::before {
-    content:'';
-    position:fixed;
-    inset:0;
-    background:
-      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,58,237,0.12) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 60% at 80% 80%, rgba(168,85,247,0.08) 0%, transparent 70%);
-    pointer-events:none;
-    z-index:0;
-  }
-  nav {
-    position: fixed;
-    top:0; left:0; right:0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2rem;
-    height: 64px;
-    background: rgba(10,8,18,0.7);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    transition: background 0.3s;
-  }
-  [data-theme="light"] nav { background: rgba(250,249,255,0.8); }
-  .nav-logo {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-  }
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--purple), var(--accent));
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    color: white;
-    font-weight: 800;
-  }
-  .nav-links { display: flex; gap: 2rem; list-style: none; }
-  .nav-links a {
-    color: var(--text2);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-  .nav-links a:hover { color: var(--purple3); }
-  .nav-right { display: flex; align-items: center; gap: 1rem; }
-  .theme-btn {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    transition: all 0.2s;
-    color: var(--text);
-  }
-  .theme-btn:hover { border-color: var(--purple); background: var(--glass); transform: scale(1.05); }
-  .btn-nav {
-    background: linear-gradient(135deg, var(--purple), var(--purple2));
-    color: white;
-    border: none;
-    padding: 0.5rem 1.2rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: opacity 0.2s, transform 0.2s;
-  }
-  .btn-nav:hover { opacity:0.9; transform: translateY(-1px); }
-  section { position: relative; z-index:1; }
-  #home {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 8rem 2rem 4rem;
-  }
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--glass);
-    border: 1px solid var(--border2);
-    border-radius: 100px;
-    padding: 0.4rem 1rem;
-    font-size: 0.78rem;
-    font-family: 'DM Mono', monospace;
-    color: var(--purple3);
-    margin-bottom: 2rem;
-    animation: fadeUp 0.6s ease both;
-  }
-  .badge-dot {
-    width: 6px; height: 6px;
-    background: var(--success);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
+  body { font-family: 'Instrument Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
+  body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,58,237,0.12) 0%, transparent 70%), radial-gradient(ellipse 40% 60% at 80% 80%, rgba(168,85,247,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 2rem; height:64px; background:rgba(10,8,18,0.7); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); transition:background 0.3s; }
+  [data-theme="light"] nav { background:rgba(250,249,255,0.8); }
+  .nav-logo { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+  .logo-icon { width:32px; height:32px; background:linear-gradient(135deg,var(--purple),var(--accent)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem; color:white; font-weight:800; }
+  .nav-links { display:flex; gap:2rem; list-style:none; }
+  .nav-links a { color:var(--text2); text-decoration:none; font-size:0.9rem; font-weight:500; transition:color 0.2s; }
+  .nav-links a:hover { color:var(--purple3); }
+  .nav-right { display:flex; align-items:center; gap:1rem; }
+  .theme-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border2); background:var(--surface); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; transition:all 0.2s; color:var(--text); }
+  .theme-btn:hover { border-color:var(--purple); background:var(--glass); transform:scale(1.05); }
+  .btn-nav { background:linear-gradient(135deg,var(--purple),var(--purple2)); color:white; border:none; padding:0.5rem 1.2rem; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; text-decoration:none; transition:opacity 0.2s,transform 0.2s; }
+  .btn-nav:hover { opacity:0.9; transform:translateY(-1px); }
+  section { position:relative; z-index:1; }
+  #home { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:8rem 2rem 4rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.5rem; background:var(--glass); border:1px solid var(--border2); border-radius:100px; padding:0.4rem 1rem; font-size:0.78rem; font-family:'DM Mono',monospace; color:var(--purple3); margin-bottom:2rem; animation:fadeUp 0.6s ease both; }
+  .badge-dot { width:6px; height:6px; background:var(--success); border-radius:50%; animation:pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-  .hero-title {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(2rem, 5vw, 4.5rem);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin-bottom: 1.5rem;
-    animation: fadeUp 0.6s 0.1s ease both;
-  }
-  .hero-title span {
-    background: linear-gradient(135deg, var(--purple2), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero-sub {
-    font-size: 1.05rem;
-    color: var(--text2);
-    max-width: 540px;
-    line-height: 1.7;
-    margin-bottom: 3rem;
-    animation: fadeUp 0.6s 0.2s ease both;
-  }
-  .hero-btns {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    animation: fadeUp 0.6s 0.3s ease both;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--purple), var(--purple2));
-    color: white;
-    border: none;
-    padding: 0.85rem 2rem;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s;
-    box-shadow: 0 8px 32px var(--purple-glow);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .btn-primary:hover { transform:translateY(-2px); box-shadow: 0 12px 40px var(--purple-glow); }
-  .btn-secondary {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border2);
-    padding: 0.85rem 2rem;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .btn-secondary:hover { border-color: var(--purple); transform:translateY(-2px); }
-  .hero-stats {
-    display: flex;
-    gap: 3rem;
-    justify-content: center;
-    margin-top: 4rem;
-    flex-wrap: wrap;
-    animation: fadeUp 0.6s 0.4s ease both;
-  }
-  .stat { text-align: center; }
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--purple3);
-  }
-  .stat-label {
-    font-size: 0.8rem;
-    color: var(--text3);
-    margin-top: 0.25rem;
-    font-family: 'DM Mono', monospace;
-  }
-  #how { padding: 6rem 2rem; max-width: 1100px; margin: 0 auto; }
-  .section-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--purple3);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-    display: block;
-  }
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(1.5rem, 3.5vw, 2.4rem);
-    font-weight: 800;
-    line-height: 1.15;
-    margin-bottom: 1rem;
-  }
-  .section-sub {
-    color: var(--text2);
-    font-size: 1rem;
-    line-height: 1.7;
-    max-width: 520px;
-    margin-bottom: 3.5rem;
-  }
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
-  .step-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem;
-    transition: border-color 0.2s, transform 0.2s;
-    backdrop-filter: blur(10px);
-  }
-  .step-card:hover { border-color: var(--purple); transform: translateY(-4px); }
-  .step-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--purple3);
-    background: var(--glass);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    padding: 0.2rem 0.5rem;
-    display: inline-block;
-    margin-bottom: 1rem;
-  }
-  .step-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
-  .step-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
-  .step-card p { font-size: 0.88rem; color: var(--text2); line-height: 1.6; }
-  #analyze { padding: 6rem 2rem; max-width: 900px; margin: 0 auto; }
-  .analyzer-box {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 2.5rem;
-    backdrop-filter: blur(20px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  }
-  [data-theme="light"] .analyzer-box { box-shadow: 0 20px 60px rgba(124,58,237,0.1); }
+  .hero-title { font-family:'Syne',sans-serif; font-size:clamp(2rem,5vw,4.5rem); font-weight:800; line-height:1.1; letter-spacing:-0.02em; margin-bottom:1.5rem; animation:fadeUp 0.6s 0.1s ease both; }
+  .hero-title span { background:linear-gradient(135deg,var(--purple2),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-sub { font-size:1.05rem; color:var(--text2); max-width:540px; line-height:1.7; margin-bottom:3rem; animation:fadeUp 0.6s 0.2s ease both; }
+  .hero-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; animation:fadeUp 0.6s 0.3s ease both; }
+  .btn-primary { background:linear-gradient(135deg,var(--purple),var(--purple2)); color:white; border:none; padding:0.85rem 2rem; border-radius:12px; font-size:0.95rem; font-weight:600; cursor:pointer; text-decoration:none; transition:all 0.2s; box-shadow:0 8px 32px var(--purple-glow); display:inline-flex; align-items:center; gap:0.5rem; }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px var(--purple-glow); }
+  .btn-secondary { background:var(--surface); color:var(--text); border:1px solid var(--border2); padding:0.85rem 2rem; border-radius:12px; font-size:0.95rem; font-weight:600; cursor:pointer; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:0.5rem; }
+  .btn-secondary:hover { border-color:var(--purple); transform:translateY(-2px); }
+  .hero-stats { display:flex; gap:3rem; justify-content:center; margin-top:4rem; flex-wrap:wrap; animation:fadeUp 0.6s 0.4s ease both; }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; color:var(--purple3); }
+  .stat-label { font-size:0.8rem; color:var(--text3); margin-top:0.25rem; font-family:'DM Mono',monospace; }
+  #how { padding:6rem 2rem; max-width:1100px; margin:0 auto; }
+  .section-label { font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--purple3); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:1rem; display:block; }
+  .section-title { font-family:'Syne',sans-serif; font-size:clamp(1.5rem,3.5vw,2.4rem); font-weight:800; line-height:1.15; margin-bottom:1rem; }
+  .section-sub { color:var(--text2); font-size:1rem; line-height:1.7; max-width:520px; margin-bottom:3.5rem; }
+  .steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.5rem; }
+  .step-card { background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:1.5rem; transition:border-color 0.2s,transform 0.2s; backdrop-filter:blur(10px); }
+  .step-card:hover { border-color:var(--purple); transform:translateY(-4px); }
+  .step-num { font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--purple3); background:var(--glass); border:1px solid var(--border2); border-radius:6px; padding:0.2rem 0.5rem; display:inline-block; margin-bottom:0.75rem; }
+  .step-icon { font-size:1.8rem; margin-bottom:0.75rem; display:block; }
+  .step-card h3 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:0.5rem; }
+  .step-card p { font-size:0.85rem; color:var(--text2); line-height:1.6; }
+  #analyze { padding:6rem 2rem; max-width:900px; margin:0 auto; }
+  .analyzer-box { background:var(--card-bg); border:1px solid var(--border); border-radius:24px; padding:2rem; backdrop-filter:blur(20px); box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  [data-theme="light"] .analyzer-box { box-shadow:0 20px 60px rgba(124,58,237,0.1); }
+  .wallet-connect-bar { display:flex; align-items:center; justify-content:space-between; background:var(--glass); border:1px solid var(--border2); border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem; }
+  .wallet-status { font-family:'DM Mono',monospace; font-size:0.8rem; color:var(--text3); display:flex; align-items:center; gap:0.5rem; }
+  .wallet-status.connected { color:var(--success); }
+  .wallet-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); }
+  .wallet-dot.connected { background:var(--success); }
+  .connect-btn { background:linear-gradient(135deg,var(--purple),var(--purple2)); color:white; border:none; padding:0.5rem 1.2rem; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .connect-btn:hover { opacity:0.9; transform:translateY(-1px); }
+  .connect-btn.connected { background:var(--surface2); color:var(--text2); border:1px solid var(--border2); }
+  .payment-note { display:flex; align-items:center; gap:0.6rem; background:var(--glass); border:1px solid var(--border2); border-radius:10px; padding:0.7rem 1rem; font-size:0.82rem; color:var(--text2); margin-bottom:1.5rem; font-family:'DM Mono',monospace; flex-wrap:wrap; }
+  .payment-note span { color:var(--purple3); font-weight:500; }
+  .input-group { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .wallet-input { flex:1; min-width:200px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.2rem; color:var(--text); font-family:'DM Mono',monospace; font-size:0.85rem; outline:none; transition:border-color 0.2s; }
+  .wallet-input:focus { border-color:var(--purple); }
+  .wallet-input::placeholder { color:var(--text3); }
 
-  /* Wallet connect button */
-  .wallet-connect-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--glass);
-    border: 1px solid var(--border2);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-  .wallet-status {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--text3);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .wallet-status.connected { color: var(--success); }
-  .wallet-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--text3);
-  }
-  .wallet-dot.connected { background: var(--success); }
-  .connect-btn {
-    background: linear-gradient(135deg, var(--purple), var(--purple2));
-    color: white;
-    border: none;
-    padding: 0.5rem 1.2rem;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .connect-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-  .connect-btn.connected {
-    background: var(--surface2);
-    color: var(--text2);
-    border: 1px solid var(--border2);
-  }
+  /* Action buttons row */
+  .action-btns { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .demo-btn { flex:1; min-width:140px; background:var(--surface); color:var(--text); border:1px solid var(--border2); padding:0.85rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+  .demo-btn:hover { border-color:var(--purple3); transform:translateY(-1px); }
+  .demo-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .pay-btn { flex:1; min-width:140px; background:linear-gradient(135deg,var(--purple),var(--purple2)); color:white; border:none; padding:0.85rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 20px var(--purple-glow); display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+  .pay-btn:hover { transform:translateY(-1px); opacity:0.9; }
+  .pay-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
 
-  .input-group { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .wallet-input {
-    flex: 1;
-    min-width: 260px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.9rem 1.2rem;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .wallet-input:focus { border-color: var(--purple); }
-  .wallet-input::placeholder { color: var(--text3); }
-  .analyze-btn {
-    background: linear-gradient(135deg, var(--purple), var(--purple2));
-    color: white;
-    border: none;
-    padding: 0.9rem 1.8rem;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-    box-shadow: 0 4px 20px var(--purple-glow);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .analyze-btn:hover { transform:translateY(-2px); opacity:0.9; }
-  .analyze-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-  .payment-note {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: var(--glass);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 0.7rem 1rem;
-    font-size: 0.82rem;
-    color: var(--text2);
-    margin-bottom: 2rem;
-    font-family: 'DM Mono', monospace;
-  }
-  .payment-note span { color: var(--purple3); font-weight: 500; }
-  .loading { display: none; flex-direction: column; align-items: center; gap: 1rem; padding: 3rem; color: var(--text2); font-size: 0.9rem; }
-  .loading.visible { display: flex; }
-  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .error-box { display: none; background: rgba(248,113,113,0.1); border: 1px solid var(--error); border-radius: 12px; padding: 1rem 1.5rem; color: var(--error); font-size: 0.88rem; margin-top: 1rem; }
-  .error-box.visible { display: block; }
-  #results { display: none; }
-  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+  .demo-banner { background:rgba(251,191,36,0.1); border:1px solid var(--warning); border-radius:10px; padding:0.7rem 1rem; font-size:0.82rem; color:var(--warning); margin-bottom:1.5rem; display:none; font-family:'DM Mono',monospace; }
+  .demo-banner.visible { display:block; }
+  .loading { display:none; flex-direction:column; align-items:center; gap:1rem; padding:2.5rem; color:var(--text2); font-size:0.9rem; }
+  .loading.visible { display:flex; }
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--purple); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .error-box { display:none; background:rgba(248,113,113,0.1); border:1px solid var(--error); border-radius:12px; padding:1rem 1.5rem; color:var(--error); font-size:0.88rem; margin-top:1rem; }
+  .error-box.visible { display:block; }
+  #results { display:none; }
+  .results-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:2rem; }
   @media(max-width:640px){ .results-grid{ grid-template-columns:1fr; } }
-  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; transition: border-color 0.2s; }
-  .result-card:hover { border-color: var(--border2); }
-  .result-card.full { grid-column: 1/-1; }
-  .card-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-  .ai-summary-text { font-size: 0.95rem; color: var(--text); line-height: 1.75; padding: 1rem; background: var(--glass); border-radius: 10px; border-left: 3px solid var(--purple); }
-  .balances-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-  .balances-table th { text-align: left; color: var(--text3); font-family: 'DM Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
-  .balances-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 0.82rem; }
-  .balances-table tr:last-child td { border-bottom: none; }
-  .balances-table tr:hover td { background: var(--glass); }
-  .asset-badge { display: inline-block; background: var(--glass); border: 1px solid var(--border2); border-radius: 6px; padding: 0.15rem 0.5rem; font-size: 0.75rem; color: var(--purple3); font-weight: 500; }
-  .chart-container { position: relative; height: 200px; display: flex; align-items: center; justify-content: center; }
-  .donut-chart { width: 180px; height: 180px; }
-  .chart-legend { display: flex; flex-direction: column; gap: 0.5rem; margin-left: 1.5rem; }
-  .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-family: 'DM Mono', monospace; color: var(--text2); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .tx-list { display: flex; flex-direction: column; gap: 0.75rem; }
-  .tx-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--glass); border-radius: 10px; font-size: 0.82rem; font-family: 'DM Mono', monospace; }
-  .tx-type { background: var(--surface2); border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.72rem; color: var(--purple3); white-space: nowrap; }
-  .tx-hash { color: var(--text3); flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tx-date { color: var(--text3); font-size: 0.75rem; white-space: nowrap; }
-  #pricing { padding: 6rem 2rem; max-width: 900px; margin: 0 auto; }
-  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
-  .pricing-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; backdrop-filter: blur(10px); transition: all 0.2s; position: relative; }
-  .pricing-card.featured { border-color: var(--purple); box-shadow: 0 0 40px var(--purple-glow); }
-  .pricing-card:hover { transform: translateY(-4px); }
-  .featured-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--purple), var(--accent)); color: white; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.8rem; border-radius: 100px; white-space: nowrap; }
-  .pricing-name { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text2); margin-bottom: 1rem; }
-  .pricing-price { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--text); margin-bottom: 0.25rem; }
-  .pricing-price sup { font-size: 1rem; vertical-align: super; }
-  .pricing-unit { font-size: 0.8rem; color: var(--text3); font-family: 'DM Mono', monospace; margin-bottom: 1.5rem; }
-  .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2rem; }
-  .pricing-features li { font-size: 0.88rem; color: var(--text2); display: flex; align-items: center; gap: 0.6rem; }
-  .pricing-features li::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
-  .btn-pricing { width: 100%; padding: 0.85rem; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); background: var(--surface); color: var(--text); transition: all 0.2s; text-decoration: none; display: block; text-align: center; }
-  .btn-pricing.featured { background: linear-gradient(135deg, var(--purple), var(--purple2)); border-color: transparent; color: white; box-shadow: 0 4px 20px var(--purple-glow); }
-  .btn-pricing:hover { transform: translateY(-2px); opacity: 0.9; }
-  footer { border-top: 1px solid var(--border); padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; position: relative; z-index: 1; text-align: center; }
-  .footer-top { display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 1rem; }
-  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
-  .footer-copy { font-size: 0.8rem; color: var(--text3); font-family: 'DM Mono', monospace; }
-  .footer-links { display: flex; gap: 1.5rem; }
-  .footer-links a { font-size: 0.82rem; color: var(--text3); text-decoration: none; transition: color 0.2s; }
-  .footer-links a:hover { color: var(--purple3); }
-  .footer-built { font-size: 0.8rem; color: var(--text3); font-family: 'DM Mono', monospace; text-align: center; width: 100%; padding-top: 1rem; border-top: 1px solid var(--border); margin-top: 0.5rem; }
-  .footer-built a { color: var(--purple3); text-decoration: none; font-weight: 500; transition: color 0.2s; }
-  .footer-built a:hover { color: var(--accent); }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 2rem; position: relative; z-index: 1; }
-  @media(max-width:640px){ nav { padding: 0 1rem; } .nav-links { display: none; } .hero-stats { gap: 1.5rem; } .analyzer-box { padding: 1.5rem; } }
+  .result-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.5rem; }
+  .result-card.full { grid-column:1/-1; }
+  .card-title { font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+  .ai-summary-text { font-size:0.95rem; color:var(--text); line-height:1.75; padding:1rem; background:var(--glass); border-radius:10px; border-left:3px solid var(--purple); }
+  .balances-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .balances-table th { text-align:left; color:var(--text3); font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); }
+  .balances-table td { padding:0.65rem 0.75rem; border-bottom:1px solid var(--border); font-family:'DM Mono',monospace; font-size:0.82rem; }
+  .balances-table tr:last-child td { border-bottom:none; }
+  .balances-table tr:hover td { background:var(--glass); }
+  .asset-badge { display:inline-block; background:var(--glass); border:1px solid var(--border2); border-radius:6px; padding:0.15rem 0.5rem; font-size:0.75rem; color:var(--purple3); font-weight:500; }
+  .chart-container { position:relative; height:200px; display:flex; align-items:center; justify-content:center; }
+  .donut-chart { width:160px; height:160px; flex-shrink:0; }
+  .chart-legend { display:flex; flex-direction:column; gap:0.5rem; margin-left:1rem; overflow:hidden; }
+  .legend-item { display:flex; align-items:center; gap:0.5rem; font-size:0.75rem; font-family:'DM Mono',monospace; color:var(--text2); white-space:nowrap; }
+  .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .tx-list { display:flex; flex-direction:column; gap:0.75rem; }
+  .tx-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem; background:var(--glass); border-radius:10px; font-size:0.82rem; font-family:'DM Mono',monospace; flex-wrap:wrap; }
+  .tx-type { background:var(--surface2); border-radius:6px; padding:0.2rem 0.6rem; font-size:0.72rem; color:var(--purple3); white-space:nowrap; }
+  .tx-hash { color:var(--text3); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .tx-date { color:var(--text3); font-size:0.75rem; white-space:nowrap; }
+  #pricing { padding:6rem 2rem; max-width:900px; margin:0 auto; }
+  .pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; margin-top:3rem; }
+  .pricing-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:2rem; backdrop-filter:blur(10px); transition:all 0.2s; position:relative; }
+  .pricing-card.featured { border-color:var(--purple); box-shadow:0 0 40px var(--purple-glow); }
+  .pricing-card:hover { transform:translateY(-4px); }
+  .featured-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,var(--purple),var(--accent)); color:white; font-size:0.72rem; font-weight:700; padding:0.25rem 0.8rem; border-radius:100px; white-space:nowrap; }
+  .pricing-name { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; color:var(--text2); margin-bottom:1rem; }
+  .pricing-price { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; color:var(--text); margin-bottom:0.25rem; }
+  .pricing-price sup { font-size:1rem; vertical-align:super; }
+  .pricing-unit { font-size:0.8rem; color:var(--text3); font-family:'DM Mono',monospace; margin-bottom:1.5rem; }
+  .pricing-features { list-style:none; display:flex; flex-direction:column; gap:0.7rem; margin-bottom:2rem; }
+  .pricing-features li { font-size:0.88rem; color:var(--text2); display:flex; align-items:center; gap:0.6rem; }
+  .pricing-features li::before { content:'✓'; color:var(--success); font-weight:700; flex-shrink:0; }
+  .btn-pricing { width:100%; padding:0.85rem; border-radius:12px; font-size:0.9rem; font-weight:600; cursor:pointer; border:1px solid var(--border2); background:var(--surface); color:var(--text); transition:all 0.2s; text-decoration:none; display:block; text-align:center; }
+  .btn-pricing.featured { background:linear-gradient(135deg,var(--purple),var(--purple2)); border-color:transparent; color:white; box-shadow:0 4px 20px var(--purple-glow); }
+  .btn-pricing:hover { transform:translateY(-2px); opacity:0.9; }
+  footer { border-top:1px solid var(--border); padding:2rem; display:flex; flex-direction:column; align-items:center; gap:1rem; position:relative; z-index:1; text-align:center; }
+  .footer-top { display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:1rem; }
+  .footer-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; color:var(--text); display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+  .footer-copy { font-size:0.8rem; color:var(--text3); font-family:'DM Mono',monospace; }
+  .footer-links { display:flex; gap:1.5rem; }
+  .footer-links a { font-size:0.82rem; color:var(--text3); text-decoration:none; transition:color 0.2s; }
+  .footer-links a:hover { color:var(--purple3); }
+  .footer-built { font-size:0.8rem; color:var(--text3); font-family:'DM Mono',monospace; text-align:center; width:100%; padding-top:1rem; border-top:1px solid var(--border); }
+  .footer-built a { color:var(--purple3); text-decoration:none; font-weight:500; }
+  .footer-built a:hover { color:var(--accent); }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+  .divider { height:1px; background:linear-gradient(90deg,transparent,var(--border),transparent); margin:0 2rem; position:relative; z-index:1; }
+  @media(max-width:640px){ nav{padding:0 1rem;} .nav-links{display:none;} .hero-stats{gap:1.5rem;} .analyzer-box{padding:1.5rem;} .action-btns{flex-direction:column;} }
 </style>
 </head>
 <body>
@@ -502,10 +182,10 @@
     Stellar Data,<br/><span>AI Analyzed.</span><br/>Pay Per Query.
   </h1>
   <p class="hero-sub">
-    DataVend is an autonomous AI agent that sells on-chain Stellar wallet data. Pay $0.01 in USDC via x402, get instant AI-powered insights — no accounts, no subscriptions.
+    DataVend is an autonomous AI agent that sells on-chain Stellar wallet data. Pay $0.01 USDC via x402, get instant AI-powered insights — no accounts, no subscriptions.
   </p>
   <div class="hero-btns">
-    <a href="#analyze" class="btn-primary">⚡ Analyze a Wallet</a>
+    <a href="#analyze" class="btn-primary">⚡ Try Demo Free</a>
     <a href="#how" class="btn-secondary">How it works →</a>
   </div>
   <div class="hero-stats">
@@ -521,31 +201,31 @@
 <section id="how">
   <span class="section-label">How it works</span>
   <h2 class="section-title">Simple. Autonomous. Instant.</h2>
-  <p class="section-sub">DataVend is a fully autonomous AI agent. No logins, no API keys for users — just connect your Freighter wallet, pay and get data.</p>
+  <p class="section-sub">Two ways to use DataVend — try it free in demo mode, or pay $0.01 USDC via x402 for full access.</p>
   <div class="steps">
     <div class="step-card">
       <span class="step-num">01</span>
-      <span class="step-icon">🔗</span>
-      <h3>Connect Freighter Wallet</h3>
-      <p>Connect your Stellar Freighter wallet extension. This is how you authorize the $0.01 USDC micropayment via x402.</p>
+      <span class="step-icon">🔍</span>
+      <h3>Enter Wallet Address</h3>
+      <p>Paste any Stellar mainnet wallet address. DataVend accepts any valid Stellar public key starting with G.</p>
     </div>
     <div class="step-card">
       <span class="step-num">02</span>
-      <span class="step-icon">🔍</span>
-      <h3>Enter a Wallet Address</h3>
-      <p>Paste any Stellar mainnet wallet address into the analyzer. DataVend accepts any valid Stellar public key.</p>
+      <span class="step-icon">🚀</span>
+      <h3>Try Demo Free</h3>
+      <p>Click Demo Mode to instantly get AI-powered wallet analysis for free. No wallet needed.</p>
     </div>
     <div class="step-card">
       <span class="step-num">03</span>
       <span class="step-icon">💳</span>
       <h3>Pay via x402</h3>
-      <p>Your Freighter wallet signs a $0.01 USDC micropayment using the x402 protocol. The payment IS the credential — no account needed.</p>
+      <p>Connect Freighter on desktop Chrome, pay $0.01 USDC via x402 on Stellar. The payment IS the credential.</p>
     </div>
     <div class="step-card">
       <span class="step-num">04</span>
       <span class="step-icon">📊</span>
       <h3>Get AI Insights</h3>
-      <p>Receive token balances, transaction history, portfolio chart, and an AI-written wallet summary powered by Claude.</p>
+      <p>Receive token balances, transaction history, portfolio chart, and a Claude AI wallet summary instantly.</p>
     </div>
   </div>
 </section>
@@ -555,7 +235,7 @@
 <section id="analyze">
   <span class="section-label">Wallet Analyzer</span>
   <h2 class="section-title">Analyze Any Stellar Wallet</h2>
-  <p class="section-sub">Connect your Freighter wallet, enter a Stellar address, and pay $0.01 USDC via x402 to get instant AI insights.</p>
+  <p class="section-sub">Try free with Demo Mode, or connect Freighter and pay $0.01 USDC via x402 for the full paid experience.</p>
 
   <div class="analyzer-box">
 
@@ -569,17 +249,25 @@
     </div>
 
     <div class="payment-note">
-      🔒 Secured by x402 · <span>$0.01 USDC per query</span> · Powered by Claude AI · Settled on Stellar in ~5s
+      🔒 x402 on Stellar · <span>$0.01 USDC per query</span> · Claude AI · Settles in ~5s
     </div>
 
     <div class="input-group">
       <input type="text" class="wallet-input" id="walletInput" placeholder="G... Enter Stellar wallet address" spellcheck="false" />
-      <button class="analyze-btn" id="analyzeBtn" onclick="analyzeWallet()">⚡ Analyze</button>
+    </div>
+
+    <div class="action-btns">
+      <button class="demo-btn" id="demoBtn" onclick="runDemo()">🚀 Demo Mode (Free)</button>
+      <button class="pay-btn" id="payBtn" onclick="runPaid()">⚡ Pay with Freighter ($0.01)</button>
+    </div>
+
+    <div class="demo-banner" id="demoBanner">
+      🚀 Demo Mode — Showing free preview. Connect Freighter and pay $0.01 USDC via x402 for full access.
     </div>
 
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      <span id="loadingText">Connecting to Stellar...</span>
+      <span id="loadingText">Fetching wallet data...</span>
     </div>
 
     <div class="error-box" id="errorBox"></div>
@@ -621,30 +309,29 @@
   <p class="section-sub">No subscriptions. No accounts. Pay only for what you use, directly on-chain via x402.</p>
   <div class="pricing-grid">
     <div class="pricing-card">
-      <div class="pricing-name">Explorer</div>
-      <div class="pricing-price"><sup>$</sup>0.01</div>
-      <div class="pricing-unit">per wallet query</div>
+      <div class="pricing-name">Demo</div>
+      <div class="pricing-price">Free</div>
+      <div class="pricing-unit">try before you pay</div>
       <ul class="pricing-features">
         <li>Token balance breakdown</li>
         <li>AI wallet summary</li>
         <li>Portfolio chart</li>
-        <li>No account required</li>
+        <li>No wallet required</li>
       </ul>
-      <a href="#analyze" class="btn-pricing">Start Analyzing</a>
+      <a href="#analyze" class="btn-pricing">Try Demo</a>
     </div>
     <div class="pricing-card featured">
-      <div class="featured-badge">Most Popular</div>
-      <div class="pricing-name">Deep Dive</div>
-      <div class="pricing-price"><sup>$</sup>0.03</div>
-      <div class="pricing-unit">per wallet query</div>
+      <div class="featured-badge">x402 Payment</div>
+      <div class="pricing-name">Explorer</div>
+      <div class="pricing-price"><sup>$</sup>0.01</div>
+      <div class="pricing-unit">per wallet query · USDC on Stellar</div>
       <ul class="pricing-features">
-        <li>Everything in Explorer</li>
+        <li>Everything in Demo</li>
         <li>Full transaction history</li>
-        <li>Risk analysis</li>
-        <li>Asset performance insights</li>
         <li>x402 payment receipt</li>
+        <li>Freighter wallet required</li>
       </ul>
-      <a href="#analyze" class="btn-pricing featured">Get Deep Insights</a>
+      <a href="#analyze" class="btn-pricing featured">Pay with Freighter</a>
     </div>
     <div class="pricing-card">
       <div class="pricing-name">Agent Access</div>
@@ -656,7 +343,7 @@
         <li>JSON responses</li>
         <li>x402 auto-payment</li>
       </ul>
-      <a href="#how" class="btn-pricing">View API Docs</a>
+      <a href="https://github.com/comzzy-comzzy/datavend" target="_blank" class="btn-pricing">View on GitHub</a>
     </div>
   </div>
 </section>
@@ -685,11 +372,10 @@
 
   // Theme toggle
   const themeToggle = document.getElementById('themeToggle');
-  const html = document.documentElement;
   let isDark = true;
   themeToggle.addEventListener('click', () => {
     isDark = !isDark;
-    html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     themeToggle.textContent = isDark ? '🌙' : '☀️';
   });
 
@@ -700,8 +386,8 @@
     const dot = document.getElementById('walletDot');
     const walletStatus = document.getElementById('walletStatus');
 
-    if (typeof window.freighter === 'undefined') {
-      showError('Freighter extension not found. Please install it from freighter.app and refresh.');
+    if (typeof window.freighter === 'undefined' && typeof window.freighterApi === 'undefined') {
+      showError('Freighter extension not found. Install it from freighter.app on desktop Chrome, then refresh.');
       return;
     }
 
@@ -709,120 +395,128 @@
       btn.textContent = 'Connecting...';
       btn.disabled = true;
 
-      const result = await window.freighter.requestAccess();
-      if (result.error) throw new Error(result.error);
-
-      const pubKeyResult = await window.freighter.getPublicKey();
-      if (pubKeyResult.error) throw new Error(pubKeyResult.error);
-
-      connectedPublicKey = pubKeyResult.publicKey || pubKeyResult;
+      const api = window.freighterApi || window.freighter;
+      await api.requestAccess();
+      const addressResult = await api.getAddress();
+      connectedPublicKey = addressResult.address || addressResult;
       freighterConnected = true;
 
-      const short = connectedPublicKey.slice(0, 6) + '...' + connectedPublicKey.slice(-4);
+      const short = connectedPublicKey.slice(0,6) + '...' + connectedPublicKey.slice(-4);
       statusText.textContent = 'Connected: ' + short;
       dot.classList.add('connected');
       walletStatus.classList.add('connected');
       btn.textContent = 'Connected ✓';
       btn.classList.add('connected');
       btn.disabled = false;
-
-      // Auto-fill wallet address
       document.getElementById('walletInput').value = connectedPublicKey;
 
     } catch(err) {
       btn.textContent = 'Connect Freighter';
       btn.disabled = false;
-      showError('Could not connect Freighter: ' + err.message);
+      showError('Could not connect Freighter: ' + (err.message || err));
     }
   }
 
-  // Chart colors
-  const COLORS = ['#7c3aed','#9d5cf6','#c084fc','#e879f9','#818cf8','#60a5fa','#34d399','#fbbf24','#f87171'];
-
-  async function analyzeWallet() {
+  // Demo mode - free
+  async function runDemo() {
     const address = document.getElementById('walletInput').value.trim();
     if (!address || !address.startsWith('G')) {
       showError('Please enter a valid Stellar wallet address starting with G');
       return;
     }
+    setLoading(true, 'Fetching wallet data...');
+    clearError();
+    try {
+      const res = await fetch(`${BACKEND_URL}/demo/wallet/${address}`);
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const data = await res.json();
+      document.getElementById('demoBanner').classList.add('visible');
+      renderResults(data);
+    } catch(err) {
+      showError(err.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    if (!freighterConnected) {
-      showError('Please connect your Freighter wallet first to pay via x402.');
+  // Paid mode - x402
+  async function runPaid() {
+    const address = document.getElementById('walletInput').value.trim();
+    if (!address || !address.startsWith('G')) {
+      showError('Please enter a valid Stellar wallet address starting with G');
       return;
     }
-
-    const btn = document.getElementById('analyzeBtn');
-    const loading = document.getElementById('loading');
-    const results = document.getElementById('results');
-    const errorBox = document.getElementById('errorBox');
-    const loadingText = document.getElementById('loadingText');
-
-    btn.disabled = true;
-    loading.classList.add('visible');
-    results.style.display = 'none';
-    errorBox.classList.remove('visible');
-    loadingText.textContent = 'Requesting payment authorization...';
+    if (!freighterConnected) {
+      showError('Please connect your Freighter wallet first.');
+      return;
+    }
+    setLoading(true, 'Initiating x402 payment...');
+    clearError();
+    document.getElementById('demoBanner').classList.remove('visible');
 
     try {
-      // Step 1: Make initial request to get 402
-      const initialRes = await fetch(`${BACKEND_URL}/data/wallet/${address}`, {
+      const res = await fetch(`${BACKEND_URL}/data/wallet/${address}`, {
         headers: { 'Accept': 'application/json' }
       });
 
-      if (initialRes.status === 402) {
-        // Step 2: Decode payment instructions
-        const paymentHeader = initialRes.headers.get('PAYMENT-REQUIRED');
-        if (!paymentHeader) throw new Error('No payment instructions received');
+      if (res.status === 402) {
+        const paymentHeader = res.headers.get('PAYMENT-REQUIRED');
+        if (!paymentHeader) throw new Error('No payment instructions received from server');
+
+        setLoading(true, 'Please approve payment in Freighter...');
 
         const paymentInstructions = JSON.parse(atob(paymentHeader));
         const paymentOption = paymentInstructions.accepts[0];
 
-        loadingText.textContent = 'Please approve payment in Freighter...';
-
-        // Step 3: Sign payment with Freighter
-        const signResult = await window.freighter.signTransaction(
-          JSON.stringify({
-            type: 'x402-payment',
-            amount: paymentOption.amount,
-            asset: paymentOption.asset,
-            payTo: paymentOption.payTo,
-            network: paymentOption.network,
-          }),
-          { networkPassphrase: 'Public Global Stellar Network ; September 2015' }
-        );
+        const api = window.freighterApi || window.freighter;
+        const signResult = await api.signAuthEntry(paymentOption.extra?.authEntry || paymentHeader, {
+          networkPassphrase: 'Public Global Stellar Network ; September 2015'
+        });
 
         if (signResult.error) throw new Error('Payment rejected: ' + signResult.error);
 
-        loadingText.textContent = 'Payment sent, fetching data...';
+        setLoading(true, 'Verifying payment...');
 
-        // Step 4: Retry with payment signature
         const paidRes = await fetch(`${BACKEND_URL}/data/wallet/${address}`, {
           headers: {
             'Accept': 'application/json',
-            'PAYMENT-SIGNATURE': signResult.signedTransaction || signResult,
+            'X-PAYMENT': signResult.signedAuthEntry || signResult,
           }
         });
 
-        if (!paidRes.ok) {
-          const err = await paidRes.json();
-          throw new Error(err.error || 'Payment verification failed');
-        }
-
+        if (!paidRes.ok) { const e = await paidRes.json(); throw new Error(e.error); }
         const data = await paidRes.json();
         renderResults(data);
 
-      } else if (initialRes.ok) {
-        const data = await initialRes.json();
+      } else if (res.ok) {
+        const data = await res.json();
         renderResults(data);
       } else {
-        throw new Error('Unexpected response from server');
+        throw new Error('Unexpected server response');
       }
 
     } catch(err) {
-      showError(err.message || 'Something went wrong. Please try again.');
+      showError(err.message || 'Payment failed. Please try again.');
     } finally {
-      btn.disabled = false;
+      setLoading(false);
+    }
+  }
+
+  function setLoading(show, text) {
+    const loading = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    const demoBtn = document.getElementById('demoBtn');
+    const payBtn = document.getElementById('payBtn');
+    if (show) {
+      loading.classList.add('visible');
+      document.getElementById('results').style.display = 'none';
+      if (text) loadingText.textContent = text;
+      demoBtn.disabled = true;
+      payBtn.disabled = true;
+    } else {
       loading.classList.remove('visible');
+      demoBtn.disabled = false;
+      payBtn.disabled = false;
     }
   }
 
@@ -830,9 +524,14 @@
     const errorBox = document.getElementById('errorBox');
     errorBox.textContent = '⚠️ ' + msg;
     errorBox.classList.add('visible');
-    document.getElementById('loading').classList.remove('visible');
-    document.getElementById('analyzeBtn').disabled = false;
+    setLoading(false);
   }
+
+  function clearError() {
+    document.getElementById('errorBox').classList.remove('visible');
+  }
+
+  const COLORS = ['#7c3aed','#9d5cf6','#c084fc','#e879f9','#818cf8','#60a5fa','#34d399','#fbbf24','#f87171'];
 
   function renderResults(data) {
     document.getElementById('aiSummary').textContent = data.ai_summary || 'No summary available.';
@@ -840,62 +539,58 @@
     tbody.innerHTML = '';
     data.balances.forEach(b => {
       const row = document.createElement('tr');
-      const bal = parseFloat(b.balance);
-      row.innerHTML = `<td><span class="asset-badge">${b.asset}</span></td><td>${bal.toLocaleString(undefined, {maximumFractionDigits: 7})}</td>`;
+      row.innerHTML = `<td><span class="asset-badge">${b.asset}</span></td><td>${parseFloat(b.balance).toLocaleString(undefined,{maximumFractionDigits:7})}</td>`;
       tbody.appendChild(row);
     });
     const nonZero = data.balances.filter(b => parseFloat(b.balance) > 0);
     renderDonut(nonZero.length > 0 ? nonZero : data.balances.slice(0,1));
     fetchTransactions(data.address);
     document.getElementById('results').style.display = 'block';
-    document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
   }
 
   function renderDonut(balances) {
     const svg = document.getElementById('donutChart');
     const legend = document.getElementById('chartLegend');
-    svg.innerHTML = '';
-    legend.innerHTML = '';
-    const total = balances.reduce((s, b) => s + parseFloat(b.balance), 0);
+    svg.innerHTML = ''; legend.innerHTML = '';
+    const total = balances.reduce((s,b) => s + parseFloat(b.balance), 0);
     if (total === 0) return;
     let offset = 0;
-    const cx = 50, cy = 50, r = 35, stroke = 14;
-    const circ = 2 * Math.PI * r;
-    balances.slice(0, 6).forEach((b, i) => {
-      const pct = parseFloat(b.balance) / total;
-      const dash = pct * circ;
+    const cx=50, cy=50, r=35, stroke=14, circ=2*Math.PI*r;
+    balances.slice(0,6).forEach((b,i) => {
+      const pct = parseFloat(b.balance)/total;
+      const dash = pct*circ;
       const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
-      circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', COLORS[i % COLORS.length]);
-      circle.setAttribute('stroke-width', stroke);
-      circle.setAttribute('stroke-dasharray', `${dash} ${circ - dash}`);
-      circle.setAttribute('stroke-dashoffset', -offset * circ + circ/4);
-      circle.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+      circle.setAttribute('cx',cx); circle.setAttribute('cy',cy); circle.setAttribute('r',r);
+      circle.setAttribute('fill','none'); circle.setAttribute('stroke',COLORS[i%COLORS.length]);
+      circle.setAttribute('stroke-width',stroke);
+      circle.setAttribute('stroke-dasharray',`${dash} ${circ-dash}`);
+      circle.setAttribute('stroke-dashoffset',-offset*circ+circ/4);
+      circle.setAttribute('transform',`rotate(-90 ${cx} ${cy})`);
       svg.appendChild(circle);
       offset += pct;
       const item = document.createElement('div');
       item.className = 'legend-item';
-      item.innerHTML = `<div class="legend-dot" style="background:${COLORS[i % COLORS.length]}"></div>${b.asset} (${(pct*100).toFixed(1)}%)`;
+      item.innerHTML = `<div class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></div>${b.asset} (${(pct*100).toFixed(1)}%)`;
       legend.appendChild(item);
     });
   }
 
   async function fetchTransactions(address) {
     const txList = document.getElementById('txList');
-    txList.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;font-family:\'DM Mono\',monospace;">Loading transactions...</div>';
+    txList.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;font-family:\'DM Mono\',monospace;">Loading...</div>';
     try {
       const res = await fetch(`https://horizon.stellar.org/accounts/${address}/operations?limit=5&order=desc`);
       const data = await res.json();
       txList.innerHTML = '';
-      if (!data._embedded || !data._embedded.records.length) {
+      if (!data._embedded?.records?.length) {
         txList.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;">No transactions found.</div>';
         return;
       }
       data._embedded.records.forEach(tx => {
-        const date = new Date(tx.created_at).toLocaleDateString();
         const item = document.createElement('div');
         item.className = 'tx-item';
-        item.innerHTML = `<span class="tx-type">${tx.type.replace(/_/g,' ')}</span><span class="tx-hash">${tx.id}</span><span class="tx-date">${date}</span>`;
+        item.innerHTML = `<span class="tx-type">${tx.type.replace(/_/g,' ')}</span><span class="tx-hash">${tx.id}</span><span class="tx-date">${new Date(tx.created_at).toLocaleDateString()}</span>`;
         txList.appendChild(item);
       });
     } catch(e) {
@@ -904,7 +599,7 @@
   }
 
   document.getElementById('walletInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') analyzeWallet();
+    if (e.key === 'Enter') runDemo();
   });
 </script>
 </body>
