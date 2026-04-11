@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DataVend — AI-Powered Stellar Data Agent</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-freighter-api/1.7.1/index.min.js"></script>
 <style>
   :root[data-theme="dark"] {
     --bg: #0a0812; --bg2: #100d1a; --surface: #1c1630; --surface2: #231d3d;
@@ -374,18 +375,52 @@
     themeToggle.textContent = isDark ? '🌙' : '☀️';
   });
 
-  // Connect Freighter - fixed detection
+  // Get Freighter API - checks all possible injection points
+  function getFreighterApi() {
+    // Try all known Freighter injection points
+    if (window.freighterApi) return window.freighterApi;
+    if (window.freighter) return window.freighter;
+    // Try the CDN loaded version
+    if (typeof freighterApi !== 'undefined') return freighterApi;
+    return null;
+  }
+
+  // Check on load if Freighter is already connected
+  window.addEventListener('load', async () => {
+    setTimeout(async () => {
+      const api = getFreighterApi();
+      if (api) {
+        try {
+          const connected = await api.isConnected();
+          if (connected && connected.isConnected) {
+            const addressResult = await api.getAddress();
+            if (addressResult && addressResult.address) {
+              connectedPublicKey = addressResult.address;
+              freighterConnected = true;
+              const short = connectedPublicKey.slice(0,6) + '...' + connectedPublicKey.slice(-4);
+              document.getElementById('walletStatusText').textContent = 'Connected: ' + short;
+              document.getElementById('walletDot').classList.add('connected');
+              document.getElementById('walletStatus').classList.add('connected');
+              document.getElementById('connectBtn').textContent = 'Connected ✓';
+              document.getElementById('connectBtn').classList.add('connected');
+              document.getElementById('walletInput').value = connectedPublicKey;
+            }
+          }
+        } catch(e) {}
+      }
+    }, 1000);
+  });
+
   async function connectFreighter() {
     const btn = document.getElementById('connectBtn');
     const statusText = document.getElementById('walletStatusText');
     const dot = document.getElementById('walletDot');
     const walletStatus = document.getElementById('walletStatus');
 
-    // Check for Freighter - it injects as window.freighterApi
-    const freighter = window.freighterApi;
+    const api = getFreighterApi();
 
-    if (!freighter) {
-      showError('Freighter extension not detected. Make sure it is installed, unlocked, and you are on desktop Chrome. Then refresh the page.');
+    if (!api) {
+      showError('Freighter extension not detected. Please make sure: 1) Freighter is installed on Chrome 2) The extension is unlocked 3) You have refreshed this page after installing.');
       return;
     }
 
@@ -393,17 +428,18 @@
       btn.textContent = 'Connecting...';
       btn.disabled = true;
 
-      // Request access
-      const accessResult = await freighter.requestAccess();
+      const accessResult = await api.requestAccess();
       if (accessResult && accessResult.error) throw new Error(accessResult.error);
 
-      // Get address
-      const addressResult = await freighter.getAddress();
+      const addressResult = await api.getAddress();
       if (addressResult && addressResult.error) throw new Error(addressResult.error);
 
       connectedPublicKey = addressResult.address || addressResult;
-      freighterConnected = true;
+      if (!connectedPublicKey || !connectedPublicKey.startsWith('G')) {
+        throw new Error('Could not get wallet address from Freighter');
+      }
 
+      freighterConnected = true;
       const short = connectedPublicKey.slice(0,6) + '...' + connectedPublicKey.slice(-4);
       statusText.textContent = 'Connected: ' + short;
       dot.classList.add('connected');
@@ -412,15 +448,15 @@
       btn.classList.add('connected');
       btn.disabled = false;
       document.getElementById('walletInput').value = connectedPublicKey;
+      clearError();
 
     } catch(err) {
       btn.textContent = 'Connect Freighter';
       btn.disabled = false;
-      showError('Could not connect Freighter: ' + (err.message || JSON.stringify(err)));
+      showError('Freighter error: ' + (err.message || JSON.stringify(err)));
     }
   }
 
-  // Demo mode - free
   async function runDemo() {
     const address = document.getElementById('walletInput').value.trim();
     if (!address || !address.startsWith('G')) {
@@ -442,7 +478,6 @@
     }
   }
 
-  // Paid mode - x402
   async function runPaid() {
     const address = document.getElementById('walletInput').value.trim();
     if (!address || !address.startsWith('G')) {
@@ -464,15 +499,12 @@
 
       if (res.status === 402) {
         const paymentHeader = res.headers.get('PAYMENT-REQUIRED');
-        if (!paymentHeader) throw new Error('No payment instructions received from server');
+        if (!paymentHeader) throw new Error('No payment instructions received');
 
         setLoading(true, 'Please approve payment in Freighter...');
 
-        const paymentInstructions = JSON.parse(atob(paymentHeader));
-        const paymentOption = paymentInstructions.accepts[0];
-
-        const freighter = window.freighterApi;
-        const signResult = await freighter.signAuthEntry(paymentHeader, {
+        const api = getFreighterApi();
+        const signResult = await api.signAuthEntry(paymentHeader, {
           networkPassphrase: 'Public Global Stellar Network ; September 2015'
         });
 
