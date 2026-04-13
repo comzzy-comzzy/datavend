@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DataVend — AI-Powered Stellar Data Agent</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-<script src="https://datavend.tech/freighter.js"></script>
+
 <style>
   :root[data-theme="dark"] {
     --bg: #0a0812; --bg2: #100d1a; --surface: #1c1630; --surface2: #231d3d;
@@ -241,7 +241,7 @@
         <div class="wallet-dot" id="walletDot"></div>
         <span id="walletStatusText">Freighter not connected</span>
       </div>
-      <button class="connect-btn" id="connectBtn" onclick="connectFreighter()">Connect Freighter</button>
+      <button class="connect-btn" id="connectBtn" disabled style="opacity:0.5;cursor:not-allowed;">🔒 Wallet Connect (Coming Soon)</button>
     </div>
     <div class="payment-note">
       🔒 x402 on Stellar · <span>$0.01 USDC per query</span> · Claude AI · Settles in ~5s
@@ -251,7 +251,7 @@
     </div>
     <div class="action-btns">
       <button class="demo-btn" id="demoBtn" onclick="runDemo()">🚀 Demo Mode (Free)</button>
-      <button class="pay-btn" id="payBtn" onclick="runPaid()">⚡ Pay with Freighter ($0.01)</button>
+      <button class="pay-btn" id="payBtn" disabled style="opacity:0.5;cursor:not-allowed;">⚡ Pay with Freighter (Coming Soon)</button>
     </div>
     <div class="demo-banner" id="demoBanner">
       🚀 Demo Mode — Showing free preview. Connect Freighter and pay $0.01 USDC via x402 for full access.
